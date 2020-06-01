@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NgModule, ErrorHandler } from '@angular/core';
+import { ErrorHandler, NgModule, Provider } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LayoutModule } from '@angular/cdk/layout';
 import { HttpClientModule } from '@angular/common/http';
@@ -16,6 +16,10 @@ import { CustomChartModule } from './charts/custom-chart.module';
 import { AppRoutingModule } from './app-routing.module';
 import { ProfileComponent } from './profile/profile.component';
 import { ProfileReportComponent } from './profile/profile-report.component';
+import { OwnerInfoComponent } from './about/owner-info.component';
+import { TandCTextComponent } from './about/tandc-text.component';
+import { DisclaimerTextComponent } from './about/disclaimer-text.component';
+import { PrivacyPolicyTextComponent } from './about/privacy-policy-text.component';
 import { AboutComponent } from './about/about.component';
 import { TandCComponent } from './about/tandc.component';
 import { DisclaimerComponent } from './about/disclaimer.component';
@@ -43,16 +47,38 @@ import { Bugsnag } from '../secrets';
 
 import bugsnag from '@bugsnag/js'
 import { BugsnagErrorHandler } from '@bugsnag/plugin-angular'
+import { Client } from '@bugsnag/core';
 
-const bugsnagClient = bugsnag({
-    apiKey: Bugsnag.token,
-    notifyReleaseStages: ['development', 'production'],
-    collectUserIp: false,
-    appVersion: environment.version
-})
+let bugsnagClient: Client = {} as Client
+
+if (Bugsnag.use) {
+    bugsnagClient = bugsnag({
+        apiKey: Bugsnag.token,
+        notifyReleaseStages: ['development', 'production'],
+        collectUserIp: false,
+        appVersion: environment.version
+    })
+}
 
 export function errorHandlerFactory() {
     return new BugsnagErrorHandler(bugsnagClient);
+}
+
+const providers: Provider[] = [
+    SystemsService,
+    FactionsService,
+    StationsService,
+    UsersService,
+    AuthenticationService,
+    ServerService,
+    ThemeService,
+    TryAPIService,
+    TickService,
+    IngameIdsService
+]
+
+if (Bugsnag.use) {
+    providers.push({provide: ErrorHandler, useFactory: errorHandlerFactory})
 }
 
 @NgModule({
@@ -60,6 +86,10 @@ export function errorHandlerFactory() {
         AppComponent,
         ProfileComponent,
         ProfileReportComponent,
+        OwnerInfoComponent,
+        TandCTextComponent,
+        DisclaimerTextComponent,
+        PrivacyPolicyTextComponent,
         AboutComponent,
         TandCComponent,
         DisclaimerComponent,
@@ -89,19 +119,8 @@ export function errorHandlerFactory() {
     exports: [
         CustomChartModule
     ],
-    providers: [
-        SystemsService,
-        FactionsService,
-        StationsService,
-        UsersService,
-        AuthenticationService,
-        ServerService,
-        ThemeService,
-        TryAPIService,
-        TickService,
-        IngameIdsService,
-        { provide: ErrorHandler, useFactory: errorHandlerFactory }
-    ],
+    providers: providers,
     bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}
